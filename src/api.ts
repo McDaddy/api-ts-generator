@@ -15,7 +15,7 @@ export interface APIConfig<T extends FN> {
 
 interface $options {
   isDownload?: boolean; // whether its download api
-  isMultipart?: string; // upload formData attribute
+  isMultipart?: boolean; // upload formData attribute
   successMsg?: string; // eject message when success to override default message
   errorMsg?: string; // eject message when failed to override default message
   rawResponse?: boolean; // whether return raw http response
