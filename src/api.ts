@@ -1,7 +1,6 @@
 import axios from 'axios';
 import qs from 'query-string';
 import { Key, pathToRegexp, compile } from 'path-to-regexp';
-// import { Toast } from '@ies/semi-ui-react';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FN = (...args: any[]) => any;

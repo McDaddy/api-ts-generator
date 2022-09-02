@@ -2,10 +2,16 @@
   "name": "api-ts-generator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/lib/index.js",
+  "module": "dist/es/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rollup -c",
+    "release": "release-it"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "keywords": [],
   "author": "McDaddy",
   "license": "MIT",
@@ -14,6 +20,12 @@
     "@typescript-eslint/parser": "^5.36.1",
     "axios": "^0.27.2",
     "eslint": "^8.23.0",
+    "release-it": "^15.4.1",
+    "rollup": "^2.79.0",
+    "rollup-plugin-size-snapshot": "^0.12.0",
+    "rollup-plugin-terser": "^7.0.2",
+    "rollup-plugin-typescript2": "^0.33.0",
+    "tslib": "^2.4.0",
     "typescript": "^4.8.2"
   },
   "peerDependencies": {
