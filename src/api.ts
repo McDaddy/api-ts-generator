@@ -18,10 +18,8 @@ interface $options {
   successMsg?: string; // eject message when success to override default message
   errorMsg?: string; // eject message when failed to override default message
   rawResponse?: boolean; // whether return raw http response
-  axiosConfig?: AxiosRequestConfig
+  axiosConfig?: AxiosRequestConfig;
 }
-
-type $body = Record<string, unknown>;
 
 type Merge<A, B> = { [K in keyof A]: K extends keyof B ? B[K] : A[K] } & B extends infer O
   ? { [K in keyof O]: O[K] }
@@ -29,7 +27,6 @@ type Merge<A, B> = { [K in keyof A]: K extends keyof B ? B[K] : A[K] } & B exten
 
 export interface CallParams {
   $options?: $options;
-  $body?: $body;
 }
 
 const VALID_METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
@@ -48,15 +45,12 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
   if (!VALID_METHODS.includes(upperMethod)) {
     throw new Error(`Invalid method: ${method}`);
   }
-  return (params?: CallParams & Merge<Parameters<T>[0], Record<string, unknown>>) => {
-    const { $options, $body, ...rest } = params || {};
+  return (params?: (CallParams & Merge<Parameters<T>[0], Record<string, unknown>>) | CallParams) => {
+    const { $options, ...rest } = params || {};
     // @ts-ignore ts-issue
     const { bodyOrQuery, pathParams } = extractPathParams(api, rest);
     const { isDownload, isMultipart, rawResponse, axiosConfig } = $options || {};
     let getParams = bodyOrQuery;
-    // if ('pageNo' in bodyOrQuery && !('pageSize' in bodyOrQuery)) {
-    //   bodyOrQuery.pageSize = DEFAULT_PAGESIZE;
-    // }
     let bodyData;
     if (['POST', 'PUT'].includes(upperMethod)) {
       if (Object.keys(bodyOrQuery).length) {
@@ -71,8 +65,6 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
         }
       }
       getParams = {};
-    } else if (upperMethod === 'DELETE') {
-      bodyData = $body;
     }
     return axios({
       method,
@@ -87,22 +79,20 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
         if (rawResponse) {
           return res;
         }
+        const { onSuccess, dataPropertyName } = globalConfig;
         if (['POST', 'PUT'].includes(upperMethod)) {
-          if (
-            globalConfig.onSuccess &&
-            typeof globalConfig.onSuccess === 'function' &&
-            (successMsg ?? $options?.successMsg)
-          ) {
-            globalConfig.onSuccess((successMsg ?? $options?.successMsg)!);
+          if (onSuccess && typeof onSuccess === 'function' && (successMsg ?? $options?.successMsg)) {
+            onSuccess((successMsg ?? $options?.successMsg)!);
           }
           return res?.data;
         }
-        return globalConfig.dataPropertyName ? res.data[globalConfig.dataPropertyName] : res.data;
+        return dataPropertyName ? res.data[dataPropertyName] : res.data;
       })
       .catch((err) => {
+        const { onError } = globalConfig;
         console.error(`[Error occurred when calling API: ${generatePath(api, pathParams)}]`, err);
-        if (globalConfig.onError) {
-          globalConfig.onError(err, $options?.errorMsg);
+        if (onError) {
+          onError(err, $options?.errorMsg);
         } else {
           throw err;
         }
