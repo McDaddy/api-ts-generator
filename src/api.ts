@@ -1,24 +1,21 @@
 import axios from 'axios';
 import qs from 'query-string';
-import { Key, pathToRegexp, compile } from 'path-to-regexp';
+import { generatePath, extractPathParams } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FN = (...args: any[]) => any;
-
-const HTTP_URL_REGEX = /^http(s)?:\/\/(.*?)\//;
 
 export interface APIConfig<T extends FN> {
   api: string;
   method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'get' | 'post' | 'put' | 'delete';
   successMsg?: string;
   errorMsg?: string;
-  globalKey?: string;
   mock?: T;
 }
 
 interface $options {
   isDownload?: boolean; // whether its download api
-  uploadFileKey?: string; // upload formData attribute
+  isMultipart?: string; // upload formData attribute
   successMsg?: string; // eject message when success to override default message
   errorMsg?: string; // eject message when failed to override default message
   rawResponse?: boolean; // whether return raw http response
@@ -40,55 +37,11 @@ const VALID_METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
 
 interface GlobalConfig {
   onSuccess?: (message: string) => void;
-  onError?: (message: string) => void;
+  onError?: (error: Error, message?: string) => void;
+  dataPropertyName?: string;
 }
 
 let globalConfig: GlobalConfig = {};
-
-/**
- * Fill in the actual value for the path with parameters by path-to-regexp
- * @param path Paths that may contain parameters, such as /fdp/:id/detail, path can not include `?`
- * @param params The incoming parameters may be query or params
- * @returns
- */
-const generatePath = (path: string, params?: Record<string, unknown>) => {
-  try {
-    let urlPrefix = '';
-    const regex = new RegExp(HTTP_URL_REGEX);
-    const matchResult = regex.exec(path);
-    if (matchResult) {
-      [urlPrefix] = matchResult;
-    }
-    const toPathRepeated = compile(path.replace(HTTP_URL_REGEX, ''));
-    return `${urlPrefix}${toPathRepeated(params)}`;
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error('path:', path, 'Error parsing url parameters');
-    throw error;
-  }
-};
-
-/**
- * Use path to match the incoming parameters, extract query and params
- * @param path Paths that may contain parameters, such as /fdp/:id/detail, path can not include `?`
- * @param params The incoming parameters may be query or params
- */
-const extractPathParams = (path: string, params?: Record<string, unknown>) => {
-  const keys: Key[] = [];
-  pathToRegexp(path.replace(HTTP_URL_REGEX, '/'), keys);
-  const pathParams = {} as Record<string, unknown>;
-  const bodyOrQuery = { ...params };
-  if (keys.length > 0) {
-    keys.forEach(({ name }) => {
-      pathParams[name] = bodyOrQuery[name];
-      delete bodyOrQuery[name];
-    });
-  }
-  return {
-    pathParams,
-    bodyOrQuery,
-  };
-};
 
 export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
   const { api, method = 'GET', successMsg } = apiConfig;
@@ -100,7 +53,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
     const { $options, $body, ...rest } = params || {};
     // @ts-ignore ts-issue
     const { bodyOrQuery, pathParams } = extractPathParams(api, rest);
-    const { isDownload, uploadFileKey, rawResponse, onUploadProgress } = $options || {};
+    const { isDownload, isMultipart, rawResponse, onUploadProgress } = $options || {};
     let getParams = bodyOrQuery;
     // if ('pageNo' in bodyOrQuery && !('pageSize' in bodyOrQuery)) {
     //   bodyOrQuery.pageSize = DEFAULT_PAGESIZE;
@@ -108,7 +61,15 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
     let bodyData;
     if (['POST', 'PUT'].includes(upperMethod)) {
       if (Object.keys(bodyOrQuery).length) {
-        bodyData = uploadFileKey ? bodyOrQuery[uploadFileKey] : bodyOrQuery;
+        if (isMultipart) {
+          const formData = new FormData();
+          Object.entries(bodyOrQuery).forEach(([key, value]) => {
+            formData.append(key, value as string | Blob);
+          });
+          bodyData = formData;
+        } else {
+          bodyData = bodyOrQuery;
+        }
       }
       getParams = {};
     } else if (upperMethod === 'DELETE') {
@@ -137,11 +98,15 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
           }
           return res?.data;
         }
-        return res?.data?.data;
+        return globalConfig.dataPropertyName ? res.data['globalConfig.dataPropertyName'] : res.data;
       })
       .catch((err) => {
-        console.error('api err: ', err);
-        throw err;
+        console.error(`[Error occurred when calling API: ${generatePath(api, pathParams)}]`, err);
+        if (globalConfig.onError) {
+          globalConfig.onError(err, $options?.errorMsg);
+        } else {
+          throw err;
+        }
       }) as unknown as Promise<ReturnType<T>>;
   };
 };
