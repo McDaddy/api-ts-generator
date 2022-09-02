@@ -1,13 +1,12 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig } from 'axios';
 import qs from 'query-string';
 import { generatePath, extractPathParams } from './utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FN = (...args: any[]) => any;
 
-export interface APIConfig<T extends FN> {
+export interface APIConfig<T extends FN> extends AxiosRequestConfig {
   api: string;
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'get' | 'post' | 'put' | 'delete';
   successMsg?: string;
   errorMsg?: string;
   mock?: T;
@@ -19,7 +18,7 @@ interface $options {
   successMsg?: string; // eject message when success to override default message
   errorMsg?: string; // eject message when failed to override default message
   rawResponse?: boolean; // whether return raw http response
-  onUploadProgress?: (progressEvent: ProgressEvent) => void;
+  axiosConfig?: AxiosRequestConfig
 }
 
 type $body = Record<string, unknown>;
@@ -53,7 +52,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
     const { $options, $body, ...rest } = params || {};
     // @ts-ignore ts-issue
     const { bodyOrQuery, pathParams } = extractPathParams(api, rest);
-    const { isDownload, isMultipart, rawResponse, onUploadProgress } = $options || {};
+    const { isDownload, isMultipart, rawResponse, axiosConfig } = $options || {};
     let getParams = bodyOrQuery;
     // if ('pageNo' in bodyOrQuery && !('pageSize' in bodyOrQuery)) {
     //   bodyOrQuery.pageSize = DEFAULT_PAGESIZE;
@@ -82,7 +81,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
       paramsSerializer: (p: Record<string, string>) => qs.stringify(p),
       responseType: isDownload ? 'blob' : 'json',
       data: bodyData,
-      onUploadProgress,
+      ...axiosConfig,
     })
       .then((res) => {
         if (rawResponse) {
