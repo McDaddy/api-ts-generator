@@ -1,7 +1,8 @@
-import typescript from 'rollup-plugin-typescript2'
-import { sizeSnapshot } from 'rollup-plugin-size-snapshot'
+import typescript from 'rollup-plugin-typescript2';
+import { sizeSnapshot } from 'rollup-plugin-size-snapshot';
 import { terser } from 'rollup-plugin-terser';
-import pkg from './package.json'
+import pkg from './package.json';
+import del from 'rollup-plugin-delete';
 
 export default {
   input: 'src/api.ts',
@@ -18,9 +19,5 @@ export default {
     },
   ],
   external: ['axios'],
-  plugins: [
-    typescript(),
-    terser(),
-    sizeSnapshot(),
-  ],
-}
+  plugins: [del({ targets: 'dist/*' }), typescript(), terser(), sizeSnapshot()],
+};
