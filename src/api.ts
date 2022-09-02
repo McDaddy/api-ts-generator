@@ -98,7 +98,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
           }
           return res?.data;
         }
-        return globalConfig.dataPropertyName ? res.data['globalConfig.dataPropertyName'] : res.data;
+        return globalConfig.dataPropertyName ? res.data[globalConfig.dataPropertyName] : res.data;
       })
       .catch((err) => {
         console.error(`[Error occurred when calling API: ${generatePath(api, pathParams)}]`, err);
