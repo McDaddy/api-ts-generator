@@ -1,5 +1,5 @@
 {
-  "name": "api-ts-generator",
+  "name": "@kuimo/api-generator",
   "version": "1.0.0",
   "description": "",
   "main": "dist/lib/index.js",
