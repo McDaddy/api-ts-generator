@@ -57,7 +57,11 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
         if (isMultipart) {
           const formData = new FormData();
           Object.entries(bodyOrQuery).forEach(([key, value]) => {
-            formData.append(key, value as string | Blob);
+            if (Array.isArray(value)) {
+              value.forEach((_v) => formData.append(`${key}[]`, _v));
+            } else {
+              formData.append(key, value as string | Blob);
+            }
           });
           bodyData = formData;
         } else {
