@@ -12,7 +12,7 @@
     "dist",
     "README.md"
   ],
-  "keywords": [],
+  "keywords": ["axios", "typescript", "api"],
   "author": "McDaddy",
   "license": "MIT",
   "devDependencies": {
