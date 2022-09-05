@@ -4,12 +4,16 @@ const HTTP_URL_REGEX = /^http(s)?:\/\/(.*?)\//;
 
 /**
  * Use path to match the incoming parameters, extract query and params
- * @param path Paths that may contain parameters, such as /fdp/:id/detail, path can not include `?`
+ * @param path Paths that may contain parameters, such as /fdp/:id/detail
  * @param params The incoming parameters may be query or params
  */
 export const extractPathParams = (path: string, params?: Record<string, unknown>) => {
   const keys: Key[] = [];
-  pathToRegexp(path.replace(HTTP_URL_REGEX, '/'), keys);
+  const _path = path.replace(HTTP_URL_REGEX, '/');
+  pathToRegexp(
+    _path.indexOf('?') > 0 ? _path.substring(0, _path.indexOf('?')) : _path,
+    keys
+  ); // in case has ? in url
   const pathParams = {} as Record<string, unknown>;
   const bodyOrQuery = { ...params };
   if (keys.length > 0) {
