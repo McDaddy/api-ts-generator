@@ -75,7 +75,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
       method,
       url: generatePath(api, pathParams),
       params: getParams,
-      paramsSerializer: (p: Record<string, string>) => qs.stringify(p),
+      paramsSerializer: (p: Record<string, string>) => qs.stringify(p, { skipNull: true }),
       responseType: isDownload ? 'blob' : 'json',
       data: bodyData,
       ...axiosConfig,
