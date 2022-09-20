@@ -45,7 +45,8 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
   if (!VALID_METHODS.includes(upperMethod)) {
     throw new Error(`Invalid method: ${method}`);
   }
-  return (params?: (CallParams & Merge<Parameters<T>[0], Record<string, unknown>>) | CallParams) => {
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  return (params?: CallParams & Merge<Parameters<T>[0], {}>) => {
     const { $options, ...rest } = params || {};
     // @ts-ignore ts-issue
     const { bodyOrQuery, pathParams } = extractPathParams(api, rest);
