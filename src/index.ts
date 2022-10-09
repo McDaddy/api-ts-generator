@@ -1,4 +1,4 @@
-import apiGenerator, { initApiGenerator } from './api';
+import apiGenerator, { initApiGenerator, injectAxios } from './api';
 
-export { initApiGenerator };
+export { initApiGenerator, injectAxios };
 export default apiGenerator;
