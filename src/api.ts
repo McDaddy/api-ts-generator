@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { AxiosRequestConfig, AxiosStatic } from 'axios';
 import qs from 'query-string';
 import { generatePath, extractPathParams } from './utils';
 
@@ -30,6 +30,8 @@ export interface CallParams {
 }
 
 const VALID_METHODS = ['GET', 'POST', 'PUT', 'DELETE'];
+
+let injectedAxios: null | AxiosStatic = null;
 
 interface GlobalConfig {
   onSuccess?: (message: string) => void;
@@ -71,7 +73,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
       }
       getParams = {};
     }
-    return axios({
+    return (injectedAxios ?? axios)({
       method,
       url: generatePath(api, pathParams),
       params: getParams,
@@ -113,5 +115,9 @@ export function apiCreator<T extends FN>(apiConfig: APIConfig<T>) {
 export const initApiGenerator = (config: GlobalConfig) => {
   globalConfig = config;
 };
+
+export const injectAxios = (_axios: AxiosStatic) => {
+  injectedAxios = _axios;
+}
 
 export default apiCreator;
