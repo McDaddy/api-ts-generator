@@ -87,7 +87,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
           return res;
         }
         const { onSuccess, dataPropertyName } = globalConfig;
-        if (['POST', 'PUT'].includes(upperMethod)) {
+        if (['POST', 'PUT', 'DELETE'].includes(upperMethod)) {
           if (onSuccess && typeof onSuccess === 'function' && (successMsg ?? $options?.successMsg)) {
             onSuccess((successMsg ?? $options?.successMsg)!);
           }
