@@ -72,6 +72,8 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
         }
       }
       getParams = {};
+    } else if ('DELETE' === upperMethod && !Object.keys(getParams).length) {
+      bodyData = bodyOrQuery;
     }
     return (injectedAxios ?? axios)({
       method,
@@ -118,6 +120,6 @@ export const initApiGenerator = (config: GlobalConfig) => {
 
 export const injectAxios = (_axios: AxiosStatic) => {
   injectedAxios = _axios;
-}
+};
 
 export default apiCreator;
