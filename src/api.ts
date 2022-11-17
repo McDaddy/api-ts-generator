@@ -72,7 +72,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
         }
       }
       getParams = {};
-    } else if ('DELETE' === upperMethod && !Object.keys(getParams).length) {
+    } else if ('DELETE' === upperMethod && Object.keys(getParams).length) {
       bodyData = bodyOrQuery;
     }
     return (injectedAxios ?? axios)({
