@@ -48,7 +48,7 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
     throw new Error(`Invalid method: ${method}`);
   }
   // eslint-disable-next-line @typescript-eslint/ban-types
-  return (params?: CallParams & Merge<Parameters<T>[0], {}>) => {
+  const apiFn = (params?: CallParams & Merge<Parameters<T>[0], {}>) => {
     const { $options, ...rest } = params || {};
     // @ts-ignore ts-issue
     const { bodyOrQuery, pathParams } = extractPathParams(api, rest);
@@ -107,6 +107,8 @@ export const genRequest = function <T extends FN>(apiConfig: APIConfig<T>) {
         }
       }) as unknown as Promise<ReturnType<T>>;
   };
+  apiFn.key = `${api}-${method}`;
+  return apiFn;
 };
 
 export function apiCreator<T extends FN>(apiConfig: APIConfig<T>) {
